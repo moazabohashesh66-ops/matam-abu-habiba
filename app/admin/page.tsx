@@ -158,7 +158,7 @@ function AdminDashboard() {
 
         setCloudStatus(configured
           ? "⚠️ قاعدة البيانات تحتاج تجهيز الجدول قبل المزامنة."
-          : "⚠️ البيانات تُحفظ محلياً حالياً؛ التزامن يحتاج مفتاح الخادم السري.");
+          : "");
       })
       .catch(() => setCloudStatus("⚠️ لم تكتمل مزامنة البيانات. راجع إعدادات قاعدة البيانات."));
 
@@ -513,9 +513,11 @@ function AdminDashboard() {
         </div>
       </div>
 
-      <p className={`px-4 py-3 text-center text-sm ${cloudStatus.startsWith("✅") ? "bg-green-50 text-green-900" : "bg-yellow-50 text-yellow-900"}`}>
-        {cloudStatus}
-      </p>
+      {cloudStatus && (
+        <p className={`px-4 py-3 text-center text-sm ${cloudStatus.startsWith("✅") ? "bg-green-50 text-green-900" : "bg-yellow-50 text-yellow-900"}`}>
+          {cloudStatus}
+        </p>
+      )}
 
       <div className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8">
         {/* رسالة التنبيه */}
