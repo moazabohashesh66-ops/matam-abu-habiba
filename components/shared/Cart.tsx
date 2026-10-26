@@ -12,9 +12,11 @@ interface InvoiceDetails {
   restaurantName: string;
   orderCode: string;
   createdAt: string;
+  customerName: string;
   customerPhone: string;
   fulfillmentMethod: "delivery" | "pickup";
   deliveryAddress?: string;
+  location?: { latitude: number; longitude: number; accuracy: number };
   items: CartItem[];
   subtotal: number;
   discount: number;
@@ -69,10 +71,17 @@ function createInvoiceFile(details: InvoiceDetails): File {
     return { item, lines, height: Math.max(66, lines.length * 38 + 20) };
   });
   const infoLines = [
+    `اسم العميل: ${details.customerName}`,
     `رقم التواصل: ${details.customerPhone}`,
     `طريقة الاستلام: ${details.fulfillmentMethod === "delivery" ? "توصيل للمنزل" : "استلام من المطعم"}`,
     ...(details.deliveryAddress
       ? wrapCanvasText(measureContext, `العنوان: ${details.deliveryAddress}`, 790)
+      : []),
+    ...(details.location
+      ? [
+          `الموقع: ${details.location.latitude.toFixed(6)}, ${details.location.longitude.toFixed(6)}`,
+          `دقة الموقع التقريبية: ±${Math.round(details.location.accuracy)} متر`,
+        ]
       : []),
   ];
   const infoTop = 310;
@@ -199,12 +208,15 @@ export default function Cart() {
   const [appliedCouponCode, setAppliedCouponCode] = useState("");
   const [couponFeedback, setCouponFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [orderNotice, setOrderNotice] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [fulfillmentMethod, setFulfillmentMethod] = useState<"delivery" | "pickup">("delivery");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [locationPoint, setLocationPoint] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
+  const [locationStatus, setLocationStatus] = useState<{ type: "loading" | "success" | "error"; text: string } | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<"review" | "details">("review");
   const [checkoutError, setCheckoutError] = useState("");
-  const [checkoutErrorField, setCheckoutErrorField] = useState<"phone" | "address" | "order" | null>(null);
+  const [checkoutErrorField, setCheckoutErrorField] = useState<"name" | "phone" | "address" | "order" | null>(null);
 
   const closeCart = useCallback(() => {
     setIsOpen(false);
@@ -276,6 +288,44 @@ export default function Cart() {
     setCouponFeedback(null);
   };
 
+  const locateCustomer = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus({ type: "error", text: "تحديد الموقع غير متاح في هذا المتصفح. اكتب العنوان بالتفصيل." });
+      return;
+    }
+
+    setLocationPoint(null);
+    setLocationStatus({ type: "loading", text: "جارٍ تحديد موقعك الحالي…" });
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const nextLocation = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy,
+        };
+        setLocationPoint(nextLocation);
+        const accuracy = Math.round(coords.accuracy);
+        setLocationStatus({
+          type: "success",
+          text: accuracy <= 100
+            ? `تم تحديد موقعك بدقة تقريبية ±${accuracy} متر.`
+            : `الموقع تقريبي ±${accuracy} متر؛ جرّب مكاناً مفتوحاً للحصول على دقة أفضل.`,
+        });
+      },
+      (error) => {
+        setLocationStatus({
+          type: "error",
+          text: error.code === 1
+            ? "اسمح للموقع بالوصول إلى موقعك من إعدادات المتصفح، أو اكتب العنوان بالتفصيل."
+            : error.code === 3
+              ? "استغرق تحديد الموقع وقتاً طويلاً. أعد المحاولة أو اكتب العنوان بالتفصيل."
+              : "تعذر تحديد موقعك الآن. أعد المحاولة أو اكتب العنوان بالتفصيل.",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 },
+    );
+  };
+
   const buildWhatsAppMsg = (orderCode: string) => {
     const lines = items.map(
       (i) => `• ${i.name} × ${i.quantity} = ${i.price * i.quantity} ج.م`
@@ -285,11 +335,18 @@ export default function Cart() {
       ? `\nالخصم (${appliedCoupon.code}): -${couponDiscount} ج.م`
       : "";
     const normalizedCustomerPhone = normalizePhoneNumber(customerPhone);
+    const mapsUrl = locationPoint
+      ? `https://www.google.com/maps?q=${locationPoint.latitude.toFixed(6)},${locationPoint.longitude.toFixed(6)}`
+      : "";
     const orderDetails = [
+      `اسم العميل: ${customerName.trim()}`,
       `رقم التواصل: ${normalizedCustomerPhone}`,
       `طريقة الاستلام: ${fulfillmentMethod === "delivery" ? "توصيل للمنزل" : "استلام من المطعم"}`,
       ...(fulfillmentMethod === "delivery" && deliveryAddress.trim()
         ? [`العنوان: ${deliveryAddress.trim()}`]
+        : []),
+      ...(fulfillmentMethod === "delivery" && locationPoint && mapsUrl
+        ? [`الموقع على الخريطة: ${mapsUrl}`, `دقة تحديد الموقع التقريبية: ±${Math.round(locationPoint.accuracy)} متر`]
         : []),
     ];
     return [
@@ -320,6 +377,12 @@ export default function Cart() {
       return;
     }
     const normalizedCustomerPhone = normalizePhoneNumber(customerPhone);
+    if (customerName.trim().length < 2) {
+      setCheckoutError("اكتب اسم العميل للتواصل معك عند الحاجة.");
+      setCheckoutErrorField("name");
+      document.getElementById("customer-name")?.focus();
+      return;
+    }
     if (normalizedCustomerPhone.length < 8 || normalizedCustomerPhone.length > 15) {
       setCheckoutError("اكتب رقم تواصل صحيحاً من 8 إلى 15 رقماً.");
       setCheckoutErrorField("phone");
@@ -337,6 +400,15 @@ export default function Cart() {
 
     const phone = toWhatsAppNumber(settings.whatsappNumber || defaultSettings.whatsappNumber);
     const orderCode = createOrderCode();
+    const googleMapsUrl = locationPoint
+      ? `https://www.google.com/maps?q=${locationPoint.latitude.toFixed(6)},${locationPoint.longitude.toFixed(6)}`
+      : "";
+    const addressForOrder = fulfillmentMethod === "delivery"
+      ? [
+          deliveryAddress.trim(),
+          ...(locationPoint && googleMapsUrl ? [`موقع الخريطة: ${googleMapsUrl}`, `دقة الموقع التقريبية: ±${Math.round(locationPoint.accuracy)} متر`] : []),
+        ].join("\n")
+      : "";
     const message = buildWhatsAppMsg(orderCode);
     const whatsAppUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     const orderRegistration = fetch("/api/orders", {
@@ -347,7 +419,7 @@ export default function Cart() {
         orderCode,
         customerPhone: normalizedCustomerPhone,
         fulfillmentMethod,
-        deliveryAddress: fulfillmentMethod === "delivery" ? deliveryAddress.trim() : "",
+        deliveryAddress: addressForOrder,
         items: items.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
         subtotal: total,
         discount: couponDiscount,
@@ -365,9 +437,11 @@ export default function Cart() {
         restaurantName,
         orderCode,
         createdAt: new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date()),
+        customerName: customerName.trim(),
         customerPhone: normalizedCustomerPhone,
         fulfillmentMethod,
         deliveryAddress: fulfillmentMethod === "delivery" ? deliveryAddress.trim() : undefined,
+        location: fulfillmentMethod === "delivery" ? locationPoint ?? undefined : undefined,
         items,
         subtotal: total,
         discount: couponDiscount,
@@ -615,14 +689,6 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => { setCheckoutStep("details"); setCheckoutError(""); setCheckoutErrorField(null); setOrderNotice(""); }}
-                  className="mx-auto flex min-h-11 w-fit items-center justify-center rounded-xl bg-yellow-500 px-6 py-2.5 text-sm font-bold text-[#24150e] shadow-lg transition hover:bg-yellow-400"
-                >
-                  تأكيد الأوردر
-                </button>
-
                 </>
               )}
             </div>
@@ -632,6 +698,26 @@ export default function Cart() {
             {items.length > 0 && checkoutStep === "details" && (
               <div className="min-h-full space-y-3 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-4 sm:pb-4">
                 <div className="space-y-2.5 rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <div>
+                    <label htmlFor="customer-name" className="mb-1.5 block text-sm font-semibold text-white/80">
+                      اسم العميل
+                    </label>
+                    <input
+                      id="customer-name"
+                      type="text"
+                      autoComplete="name"
+                      value={customerName}
+                      onChange={(event) => { setCustomerName(event.target.value); setCheckoutError(""); setCheckoutErrorField(null); }}
+                      placeholder="اكتب اسمك"
+                      maxLength={80}
+                      aria-invalid={checkoutErrorField === "name"}
+                      aria-describedby={checkoutErrorField === "name" ? "customer-name-error" : undefined}
+                      className="w-full rounded-xl border border-white/10 bg-[#120a07] px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-yellow-400/60 focus:outline-none"
+                    />
+                    {checkoutErrorField === "name" && (
+                      <p id="customer-name-error" role="alert" className="mt-1 text-xs font-semibold text-red-300">{checkoutError}</p>
+                    )}
+                  </div>
                   <div>
                     <label htmlFor="customer-phone" className="mb-1.5 block text-sm font-semibold text-white/80">
                       رقم للتواصل
@@ -697,6 +783,41 @@ export default function Cart() {
                           <p id="delivery-address-error" role="alert" className="mt-1 text-xs font-semibold text-red-300">{checkoutError}</p>
                         )}
                       </div>
+                      <div className="rounded-xl border border-white/10 bg-[#120a07] p-3">
+                        <p className="mb-2 text-xs leading-relaxed text-white/55">
+                          اكتب العنوان بالتفصيل، وحدد موقعك لإرسال دبوس مباشر للمندوب.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={locateCustomer}
+                          disabled={locationStatus?.type === "loading"}
+                          className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-yellow-400/40 px-3 py-2 text-sm font-semibold text-yellow-300 transition hover:bg-yellow-400/10 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          <span aria-hidden="true">📍</span>
+                          {locationStatus?.type === "loading"
+                            ? "جارٍ تحديد الموقع…"
+                            : locationPoint ? "تحديث موقعي الحالي" : "تحديد موقعي الحالي"}
+                        </button>
+                        {locationStatus && (
+                          <p
+                            role="status"
+                            aria-live="polite"
+                            className={`mt-2 text-xs leading-relaxed ${locationStatus.type === "error" ? "text-red-300" : locationStatus.type === "success" ? "text-green-300" : "text-white/60"}`}
+                          >
+                            {locationStatus.text}
+                          </p>
+                        )}
+                        {locationPoint && (
+                          <a
+                            href={`https://www.google.com/maps?q=${locationPoint.latitude.toFixed(6)},${locationPoint.longitude.toFixed(6)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-flex min-h-9 items-center text-xs font-semibold text-yellow-200 underline underline-offset-4"
+                          >
+                            معاينة الموقع على Google Maps
+                          </a>
+                        )}
+                      </div>
                     </div>
                   )}
                   {settings.businessHours && (
@@ -750,6 +871,17 @@ export default function Cart() {
               </div>
             )}
             </div>
+            {items.length > 0 && checkoutStep === "review" && (
+              <div className="shrink-0 border-t border-white/10 bg-[#1a0e0a] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-12px_30px_rgba(0,0,0,0.2)] sm:p-4 sm:pb-4">
+                <button
+                  type="button"
+                  onClick={() => { setCheckoutStep("details"); setCheckoutError(""); setCheckoutErrorField(null); setOrderNotice(""); }}
+                  className="flex min-h-11 w-full items-center justify-center rounded-xl bg-yellow-500 px-6 py-2.5 text-sm font-bold text-[#24150e] shadow-lg transition hover:bg-yellow-400"
+                >
+                  تأكيد الأوردر
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

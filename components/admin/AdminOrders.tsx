@@ -14,6 +14,27 @@ const statusLabels: Record<OrderStatus, string> = {
 
 const statuses: OrderStatus[] = ["new", "preparing", "ready", "completed", "cancelled"];
 
+function getOrderLocation(address: string | null): string | null {
+  if (!address) return null;
+  const match = address.match(/https:\/\/www\.google\.com\/maps\?q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (!match) return null;
+
+  const latitude = Number(match[1]);
+  const longitude = Number(match[2]);
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return null;
+  }
+
+  return `https://www.google.com/maps?q=${latitude},${longitude}`;
+}
+
+function getOrderAddressText(address: string): string {
+  return address
+    .replace(/\nموقع الخريطة:.*$/m, "")
+    .replace(/\nدقة الموقع التقريبية:.*$/m, "")
+    .trim();
+}
+
 export default function AdminOrders() {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +121,21 @@ export default function AdminOrders() {
               <div className="space-y-1 text-gray-700">
                 <p>📞 <a href={`tel:${order.customer_phone}`} dir="ltr" className="font-semibold text-blue-700">{order.customer_phone}</a></p>
                 <p>🚚 {order.fulfillment_method === "delivery" ? "توصيل للمنزل" : "استلام من المطعم"}</p>
-                {order.delivery_address && <p className="leading-relaxed">📍 {order.delivery_address}</p>}
+                {order.delivery_address && (
+                  <div className="space-y-1">
+                    <p className="whitespace-pre-line leading-relaxed">📍 {getOrderAddressText(order.delivery_address)}</p>
+                    {getOrderLocation(order.delivery_address) && (
+                      <a
+                        href={getOrderLocation(order.delivery_address)!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex min-h-9 items-center font-semibold text-blue-700 underline underline-offset-4"
+                      >
+                        فتح موقع العميل على الخريطة
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="space-y-1">
                 {order.items.map((item, index) => <p key={`${item.id}-${index}`} className="text-gray-700">{item.name} × {item.quantity} <span className="text-gray-400">= {item.price * item.quantity} ج.م</span></p>)}
