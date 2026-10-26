@@ -15,6 +15,9 @@ export interface CartItem {
   name: string;
   price: number;
   quantity: number;
+  productId?: string;
+  selectedOptionIds?: string[];
+  offerId?: string;
   image?: string;
   categoryName?: string;
   categoryIcon?: string;

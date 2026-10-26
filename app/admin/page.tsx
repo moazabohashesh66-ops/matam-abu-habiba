@@ -18,14 +18,21 @@ import { defaultSettings, SETTINGS_KEY, toWhatsAppNumber } from "@/data/settings
 import { loadSharedSiteData, saveSharedDataField } from "@/lib/siteDataClient";
 
 // ضغط الصور
+const MAX_SOURCE_IMAGE_BYTES = 12 * 1024 * 1024;
+const MAX_IMAGE_PIXELS = 24_000_000;
+const SUPPORTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+
 const compressImage = (file: File, maxWidth = 800, quality = 0.75): Promise<string> =>
   new Promise((resolve, reject) => {
+    if (!SUPPORTED_IMAGE_TYPES.has(file.type)) return reject(new Error("استخدم صورة JPG أو PNG أو WebP أو AVIF."));
+    if (file.size > MAX_SOURCE_IMAGE_BYTES) return reject(new Error("حجم الصورة كبير. الحد الأقصى 12 ميجابايت."));
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (e) => {
       const img = new window.Image();
       img.src = e.target?.result as string;
       img.onload = () => {
+        if (img.width * img.height > MAX_IMAGE_PIXELS) return reject(new Error("أبعاد الصورة كبيرة جدًا. اختر صورة بأبعاد أقل."));
         const canvas = document.createElement("canvas");
         const scale = Math.min(1, maxWidth / img.width);
         canvas.width = img.width * scale;
@@ -309,7 +316,7 @@ function AdminDashboard() {
         setNewOffer(prev => ({ ...prev, image: base64 }));
         showMsg("✅ تم رفع الصورة - اضغط حفظ العرض");
       })
-      .catch(() => showMsg("❌ فشل رفع الصورة", "error"));
+      .catch((error: unknown) => showMsg(`❌ ${error instanceof Error ? error.message : "فشل رفع الصورة"}`, "error"));
   };
 
   // ========== رفع صورة القسم ==========
@@ -324,7 +331,7 @@ function AdminDashboard() {
         );
         saveMenuImmediate(updated);
       })
-      .catch(() => showMsg("❌ فشل رفع الصورة", "error"));
+      .catch((error: unknown) => showMsg(`❌ ${error instanceof Error ? error.message : "فشل رفع الصورة"}`, "error"));
   };
 
   // ========== رفع صورة المنتج ==========
@@ -340,7 +347,7 @@ function AdminDashboard() {
         });
         saveMenuImmediate(updated);
       })
-      .catch(() => showMsg("❌ فشل رفع الصورة", "error"));
+      .catch((error: unknown) => showMsg(`❌ ${error instanceof Error ? error.message : "فشل رفع الصورة"}`, "error"));
   };
 
   // ========== تعديل المنيو ==========
@@ -638,7 +645,7 @@ function AdminDashboard() {
                     <div className="flex items-center gap-4">
                       <label className="cursor-pointer bg-blue-50 border-2 border-blue-200 border-dashed rounded-xl px-6 py-3 hover:bg-blue-100 transition text-blue-600 font-semibold text-sm flex items-center gap-2">
                         📸 اختر صورة
-                        <input type="file" accept="image/*" className="hidden" onChange={handleOfferImageUpload} />
+                        <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="hidden" onChange={handleOfferImageUpload} />
                       </label>
                       {newOffer.image && (
                         <div className="relative h-28 w-28 overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50">
@@ -921,7 +928,7 @@ function AdminDashboard() {
                       📸 تغيير صورة القسم
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp,image/avif"
                         className="hidden"
                         onChange={(e) => handleCategoryImageUpload(category.id, e)}
                       />
@@ -964,7 +971,7 @@ function AdminDashboard() {
                             📸
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/jpeg,image/png,image/webp,image/avif"
                               className="hidden"
                               onChange={e => handleProductImageUpload(category.id, product.id, e)}
                             />

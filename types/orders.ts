@@ -10,6 +10,7 @@ export interface StoredOrderItem {
 export interface StoredOrder {
   id: number;
   order_code: string;
+  customer_name?: string | null;
   customer_phone: string;
   fulfillment_method: "delivery" | "pickup";
   delivery_address: string | null;

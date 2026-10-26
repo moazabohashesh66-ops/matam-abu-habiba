@@ -57,6 +57,8 @@ export default function CategoryPage() {
       id: selectedIds.length ? `${product.id}::${selectedIds.join("-")}` : product.id,
       name: optionLabel ? `${product.name} — ${optionLabel}` : product.name,
       price: product.price + optionPrice,
+      productId: product.id,
+      selectedOptionIds: selectedIds,
       image: product.image,
       categoryName: category.name,
       categoryIcon: category.icon,

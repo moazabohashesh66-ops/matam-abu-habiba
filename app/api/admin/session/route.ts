@@ -4,5 +4,8 @@ import { ADMIN_COOKIE_NAME, isAdminPasswordConfigured, isValidAdminSession } fro
 
 export async function GET(request: NextRequest) {
   const authenticated = isValidAdminSession(request.cookies.get(ADMIN_COOKIE_NAME)?.value);
-  return NextResponse.json({ authenticated, configured: isAdminPasswordConfigured() });
+  return NextResponse.json(
+    { authenticated, configured: isAdminPasswordConfigured() },
+    { headers: { "Cache-Control": "private, no-store" } },
+  );
 }

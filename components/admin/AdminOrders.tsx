@@ -39,12 +39,21 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<StoredOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [deletingOrderCode, setDeletingOrderCode] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
+
+  const sortNewestFirst = (ordersToSort: StoredOrder[]) =>
+    [...ordersToSort].sort((first, second) => {
+      const newOrderPriority = Number(first.status !== "new") - Number(second.status !== "new");
+      return newOrderPriority || Date.parse(second.created_at) - Date.parse(first.created_at);
+    });
 
   const fetchOrders = useCallback(async (): Promise<StoredOrder[]> => {
     const response = await fetch("/api/orders", { cache: "no-store" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "تعذر تحميل الطلبات");
-    return Array.isArray(data.orders) ? data.orders : [];
+    return Array.isArray(data.orders) ? sortNewestFirst(data.orders) : [];
   }, []);
 
   const loadOrders = useCallback(async () => {
@@ -68,16 +77,88 @@ export default function AdminOrders() {
   }, [fetchOrders]);
 
   const updateStatus = async (orderCode: string, status: OrderStatus) => {
-    setOrders((previous) => previous.map((order) => order.order_code === orderCode ? { ...order, status } : order));
-    const response = await fetch("/api/orders", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderCode, status }),
-    });
-    if (!response.ok) {
+    setError("");
+    setNotice("");
+    setOrders((previous) => sortNewestFirst(previous.map((order) => order.order_code === orderCode ? { ...order, status } : order)));
+    try {
+      const response = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderCode, status }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        await loadOrders();
+        setError(data.error || "تعذر حفظ حالة الطلب");
+        return;
+      }
+      setNotice("تم تحديث حالة الطلب.");
+    } catch {
+      await loadOrders();
+      setError("تعذر حفظ حالة الطلب. تحقق من الاتصال ثم حاول مرة أخرى.");
+    }
+  };
+
+  const deleteOrder = async (orderCode: string) => {
+    const order = orders.find((entry) => entry.order_code === orderCode);
+    if (!order || (order.status !== "completed" && order.status !== "cancelled")) return;
+    if (!window.confirm(`هل تريد حذف سجل الطلب رقم ${orderCode} نهائيًا؟`)) return;
+
+    setDeletingOrderCode(orderCode);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderCode }),
+      });
       const data = await response.json().catch(() => ({}));
-      setError(data.error || "تعذر حفظ حالة الطلب");
-      void loadOrders();
+      if (!response.ok) throw new Error(data.error || "تعذر حذف سجل الطلب");
+      setOrders((previous) => previous.filter((entry) => entry.order_code !== orderCode));
+      setNotice(`تم حذف سجل الطلب رقم ${orderCode}.`);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "تعذر حذف سجل الطلب");
+    } finally {
+      setDeletingOrderCode(null);
+    }
+  };
+
+  const deleteAllOrders = async () => {
+    if (orders.length === 0 || deletingAll || deletingOrderCode) return;
+    const confirmed = window.confirm(
+      "سيتم حذف جميع الطلبات المسجلة نهائيًا، بما فيها الطلبات الجديدة وقيد التجهيز. لا يمكن التراجع. هل تريد المتابعة؟",
+    );
+    if (!confirmed) return;
+
+    setDeletingAll(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deleteAll: true }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "تعذر حذف الطلبات");
+      setOrders([]);
+      setNotice(`تم حذف ${data.deleted ?? orders.length} سجل طلب.`);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "تعذر حذف الطلبات");
+    } finally {
+      setDeletingAll(false);
+    }
+  };
+
+  const logout = async () => {
+    setError("");
+    try {
+      const response = await fetch("/api/admin/orders-auth", { method: "DELETE" });
+      if (!response.ok) throw new Error("تعذر تسجيل الخروج");
+      window.location.reload();
+    } catch {
+      setError("تعذر تسجيل الخروج. حاول مرة أخرى.");
     }
   };
 
@@ -89,8 +170,19 @@ export default function AdminOrders() {
             <h1 className="text-2xl font-bold sm:text-3xl">📦 متابعة الطلبات</h1>
             <p className="mt-1 text-sm text-white/60">الطلبات الجديدة وحالة تجهيزها</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => { setLoading(true); void loadOrders(); }} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10">تحديث</button>
+            {orders.length > 0 && (
+              <button
+                type="button"
+                onClick={() => void deleteAllOrders()}
+                disabled={deletingAll || deletingOrderCode !== null || loading}
+                className="rounded-full border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-100 transition hover:bg-red-500/20 disabled:cursor-wait disabled:opacity-50"
+              >
+                {deletingAll ? "جارٍ حذف الطلبات…" : "حذف كل الطلبات"}
+              </button>
+            )}
+            <button type="button" onClick={() => void logout()} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10">خروج</button>
             <Link href="/admin" className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-bold text-[#2E1A12] hover:bg-yellow-300">لوحة الأدمن</Link>
           </div>
         </div>
@@ -98,6 +190,7 @@ export default function AdminOrders() {
 
       <div className="mx-auto max-w-5xl space-y-4 px-3 py-6 sm:px-4 sm:py-8">
         {error && <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">{error}</p>}
+        {notice && <p role="status" className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-800">{notice}</p>}
         {loading ? (
           <div className="rounded-2xl bg-white p-10 text-center text-gray-500 shadow">جارٍ تحميل الطلبات...</div>
         ) : orders.length === 0 ? (
@@ -113,12 +206,19 @@ export default function AdminOrders() {
                 <h2 className="font-bold text-[#2E1A12]">طلب #{order.order_code}</h2>
                 <p className="mt-1 text-xs text-gray-500">{new Intl.DateTimeFormat("ar-EG", { dateStyle: "medium", timeStyle: "short" }).format(new Date(order.created_at))}</p>
               </div>
-              <select value={order.status} onChange={(event) => void updateStatus(order.order_code, event.target.value as OrderStatus)} aria-label={`حالة الطلب ${order.order_code}`} className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800">
-                {statuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
-              </select>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${order.status === "completed" ? "bg-green-100 text-green-800" : order.status === "cancelled" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-900"}`}>
+                  {statusLabels[order.status]}
+                </span>
+                <label className="sr-only" htmlFor={`order-status-${order.id}`}>تغيير حالة الطلب {order.order_code}</label>
+                <select id={`order-status-${order.id}`} value={order.status} disabled={deletingAll} onChange={(event) => void updateStatus(order.order_code, event.target.value as OrderStatus)} className="min-h-10 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 disabled:opacity-50">
+                  {statuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
+                </select>
+              </div>
             </div>
             <div className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div className="space-y-1 text-gray-700">
+                <p className="font-semibold">👤 صاحب الطلب: {order.customer_name?.trim() || "الاسم غير مسجل"}</p>
                 <p>📞 <a href={`tel:${order.customer_phone}`} dir="ltr" className="font-semibold text-blue-700">{order.customer_phone}</a></p>
                 <p>🚚 {order.fulfillment_method === "delivery" ? "توصيل للمنزل" : "استلام من المطعم"}</p>
                 {order.delivery_address && (
@@ -142,6 +242,18 @@ export default function AdminOrders() {
                 <p className="border-t border-gray-100 pt-2 font-extrabold text-[#2E1A12]">الإجمالي: {order.total} ج.م</p>
               </div>
             </div>
+            {(order.status === "completed" || order.status === "cancelled") && (
+              <div className="mt-4 flex justify-end border-t border-gray-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => void deleteOrder(order.order_code)}
+                  disabled={deletingAll || deletingOrderCode === order.order_code}
+                  className="min-h-10 rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-50"
+                >
+                  {deletingOrderCode === order.order_code ? "جارٍ حذف السجل…" : "حذف السجل"}
+                </button>
+              </div>
+            )}
           </article>
         ))}
       </div>
