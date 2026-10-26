@@ -2,6 +2,7 @@
 
 import Navbar from "@/components/shared/Navbar";
 import Hero from "@/components/home/Hero";
+import OrderTracker from "@/components/home/OrderTracker";
 import CategoryGrid from "@/components/CategoryGrid";
 import TodayOffers from "@/components/home/TodayOffers";
 import { useMenuData } from "@/hooks/useMenuData";
@@ -25,6 +26,7 @@ export default function Home() {
     <>
       <Navbar />
       <Hero />
+      <OrderTracker />
       <TodayOffers menuData={menuData} />
       <CategoryGrid menuData={menuData} />
       <Footer />
