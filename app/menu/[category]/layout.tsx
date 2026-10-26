@@ -26,7 +26,7 @@ export async function generateMetadata({
       siteName: SITE_NAME,
       title: `${title} | ${SITE_NAME}`,
       description,
-      images: [{ url: "/logo.jpg", alt: SITE_NAME }],
+      images: [{ url: "/logo.png", alt: SITE_NAME }],
     },
   };
 }

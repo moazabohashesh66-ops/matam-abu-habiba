@@ -18,8 +18,8 @@ export default function Hero() {
       {/* ===== الخلفية: صورة اللوجو بلور احترافي ===== */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/logo.jpg"
-          alt="خلفية مطعم أبو حبيبه"
+          src="/logo.png"
+          alt="شعار كيان"
           fill
           sizes="100vw"
           className="object-cover object-center scale-110"
@@ -58,8 +58,8 @@ export default function Hero() {
           <div className="relative mx-auto h-36 w-36 rounded-full bg-gradient-to-tr from-yellow-400 via-orange-400 to-yellow-500 p-1 shadow-2xl shadow-yellow-500/30 sm:h-44 sm:w-44 md:h-56 md:w-56">
             <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1a0e0a]/50">
               <Image
-                src="/logo.jpg"
-                alt="مطعم أبو حبيبه"
+                src="/logo.png"
+                alt="شعار كيان"
                 width={224}
                 height={224}
                 className="w-full h-full object-cover object-top"
@@ -74,23 +74,12 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
-          className="text-4xl font-extrabold leading-tight tracking-wide text-white drop-shadow-2xl sm:text-5xl sm:tracking-wider md:text-7xl"
+          className="text-5xl font-extrabold leading-tight tracking-wide text-white drop-shadow-2xl sm:text-6xl sm:tracking-wider md:text-7xl"
         >
-          مطعم{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">
-            أبو حبيبه
+          <span className="block bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
+            كيان
           </span>
         </motion.h1>
-
-        {/* التاج الإنجليزي */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-3 text-sm font-light uppercase tracking-[3px] text-yellow-300/60 sm:text-base sm:tracking-[6px] md:text-lg md:tracking-[10px]"
-        >
-          Abu Habiba Restaurant
-        </motion.p>
 
         {/* خط فاصل */}
         <motion.div
@@ -107,7 +96,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.7 }}
           className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base md:text-lg"
         >
-          للوجبات السريعة والمأكولات الشهية بأفضل جودة وأطيب طعم
+          شاورما وكريب بطعم مختلف، وبرجر وساج وإضافات لكل الأذواق
         </motion.p>
 
         {/* رقم التليفون */}

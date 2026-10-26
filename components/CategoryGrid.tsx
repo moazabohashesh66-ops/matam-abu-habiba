@@ -47,8 +47,16 @@ export default function CategoryGrid({ menuData }: CategoryGridProps) {
           </h2>
           <div className="w-20 h-0.5 bg-yellow-400/50 mx-auto mt-4 rounded-full"></div>
           <p className="mt-4 text-base font-light text-white/50 sm:text-lg">
-            بيتزا وسندوتشات وكريب ووجبات طازجة
+            شاورما وكريب وبرجر وساج طازج
           </p>
+          <a
+            href="/kayan-menu.png"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-yellow-400/35 bg-yellow-400/10 px-5 py-2 text-sm font-semibold text-yellow-300 transition hover:bg-yellow-400 hover:text-[#24150e]"
+          >
+            عرض صورة المنيو كاملة
+          </a>
         </motion.div>
 
         <div className="grid grid-cols-2 gap-3 min-[360px]:gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">

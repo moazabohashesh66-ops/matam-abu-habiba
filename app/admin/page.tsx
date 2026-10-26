@@ -14,7 +14,7 @@ import type { Offer } from "@/data/offersData";
 import { useCoupons } from "@/hooks/useCoupons";
 import { COUPONS_CHANGED_EVENT, COUPONS_STORAGE_KEY, type CouponDiscountType, type DiscountCoupon } from "@/data/coupons";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { defaultSettings, SETTINGS_KEY, toWhatsAppNumber } from "@/data/settings";
+import { defaultSettings, normalizeSiteSettings, SETTINGS_KEY, toWhatsAppNumber } from "@/data/settings";
 import { loadSharedSiteData, saveSharedDataField } from "@/lib/siteDataClient";
 
 // ضغط الصور
@@ -132,7 +132,7 @@ function AdminDashboard() {
           const sharedMenu = hydrateMenuData(Array.isArray(data.menuData) ? data.menuData as Category[] : defaultMenuData as Category[]);
           const sharedOffers = Array.isArray(data.offers) ? data.offers as Offer[] : defaultOffers;
           const sharedCoupons = Array.isArray(data.coupons) ? data.coupons as DiscountCoupon[] : [];
-          const sharedSettings = { ...defaultSettings, ...(data.settings as Partial<typeof defaultSettings> | undefined) };
+          const sharedSettings = normalizeSiteSettings(data.settings as Partial<typeof defaultSettings> | undefined);
           setMenuData(sharedMenu);
           setOffers(sharedOffers);
           setSettings(sharedSettings);
@@ -151,7 +151,7 @@ function AdminDashboard() {
             menuData: hydrateMenuData(readLocal(MENU_STORAGE_KEY, defaultMenuData as Category[])),
             offers: readLocal(OFFERS_STORAGE_KEY, defaultOffers),
             coupons: readLocal(COUPONS_STORAGE_KEY, [] as DiscountCoupon[]),
-            settings: { ...defaultSettings, ...readLocal(SETTINGS_KEY, {}) },
+            settings: normalizeSiteSettings(readLocal(SETTINGS_KEY, {})),
           };
           localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(firstSharedData.menuData));
           localStorage.setItem(OFFERS_STORAGE_KEY, JSON.stringify(firstSharedData.offers));
@@ -464,7 +464,7 @@ function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-yellow-50 pb-32">
       {/* ===== HEADER ===== */}
       <div className="bg-[#2E1A12] px-3 py-6 text-center text-white shadow-2xl sm:px-4 sm:py-8">
-        <h1 className="text-2xl font-bold sm:text-3xl md:text-4xl">🛠️ لوحة تحكم مطعم أبو حبيبه</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl md:text-4xl">🛠️ لوحة تحكم كيان</h1>
         <p className="text-white/60 mt-1 text-sm">إدارة العروض والمنيو والصور والأسعار</p>
         <div className="mx-auto mt-4 flex max-w-3xl flex-wrap justify-center gap-2">
           <Link href="/admin/orders" className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">📦 متابعة الطلبات</Link>
@@ -1172,7 +1172,7 @@ function AdminDashboard() {
                 type="text"
                 value={settings.restaurantName}
                 onChange={e => setSettings({ ...settings, restaurantName: e.target.value })}
-                placeholder="مطعم أبو حبيبه"
+                placeholder="كيان"
                 className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -1186,7 +1186,7 @@ function AdminDashboard() {
                 type="url"
                 value={settings.facebookUrl}
                 onChange={(event) => setSettings({ ...settings, facebookUrl: event.target.value })}
-                placeholder="https://www.facebook.com/..."
+                placeholder="https://www.facebook.com/profile.php?id=61586004040638"
                 dir="ltr"
                 className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-left text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
               />
@@ -1222,7 +1222,7 @@ function AdminDashboard() {
               <p className="text-xs text-gray-500 mb-2">📋 معاينة رسالة الطلب:</p>
               <p>🍽️ <strong>طلب جديد من {settings.restaurantName}</strong></p>
               <p className="mt-1">المنتجات:</p>
-              <p>• شاورما دجاج × 2 = 120 ج.م</p>
+              <p>• شاورما كيان × 2 = 200 ج.م</p>
               <p>• كباب × 1 = 350 ج.م</p>
               <p className="mt-1">💰 <strong>الإجمالي: 470 ج.م</strong></p>
               <p className="mt-1">شكراً لطلبكم! 🙏</p>

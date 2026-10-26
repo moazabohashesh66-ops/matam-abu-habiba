@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { ORDERS_ADMIN_COOKIE_NAME, isSameOriginRequest, isValidOrdersAdminSession } from "@/lib/server/adminAuth";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { defaultSiteData } from "@/lib/siteData";
+import { isLegacyMenuData } from "@/data/menuData";
+import { normalizeSiteSettings, type SiteSettings } from "@/data/settings";
 import type { OrderStatus, StoredOrderItem } from "@/types/orders";
 import { readJsonBody, RequestBodyTooLargeError } from "@/lib/server/requestBody";
 import { checkRateLimit } from "@/lib/server/rateLimit";
@@ -14,7 +16,7 @@ type OrderCatalog = {
   menuData: unknown[];
   offers: unknown[];
   coupons: unknown[];
-  settings: Record<string, unknown>;
+  settings: SiteSettings;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -153,11 +155,12 @@ export async function POST(request: Request) {
   const { data: siteRow, error: siteError } = await supabase.from("site_state").select("data").eq("id", 1).maybeSingle();
   if (siteError) return NextResponse.json({ error: "تعذر التحقق من قائمة الأسعار. حاول مرة أخرى." }, { status: 503 });
   const siteData = isRecord(siteRow?.data) ? siteRow.data : defaultSiteData;
+  const storedMenu = Array.isArray(siteData.menuData) ? siteData.menuData : defaultSiteData.menuData;
   const catalog: OrderCatalog = {
-    menuData: Array.isArray(siteData.menuData) ? siteData.menuData : defaultSiteData.menuData,
+    menuData: isLegacyMenuData(storedMenu) ? defaultSiteData.menuData : storedMenu,
     offers: Array.isArray(siteData.offers) ? siteData.offers : defaultSiteData.offers,
     coupons: Array.isArray(siteData.coupons) ? siteData.coupons : defaultSiteData.coupons,
-    settings: (isRecord(siteData.settings) ? siteData.settings : defaultSiteData.settings) as unknown as Record<string, unknown>,
+    settings: normalizeSiteSettings(isRecord(siteData.settings) ? siteData.settings : defaultSiteData.settings),
   };
   const items = resolveOrderItems(body.items, catalog);
   if (!items) return NextResponse.json({ error: "تعذر التحقق من المنتجات أو أسعارها. حدّث السلة ثم حاول مرة أخرى." }, { status: 400 });

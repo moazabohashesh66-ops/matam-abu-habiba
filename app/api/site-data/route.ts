@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { isAdminPasswordConfigured, isSameOriginRequest, isValidAdminSession, ADMIN_COOKIE_NAME } from "@/lib/server/adminAuth";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { defaultSiteData, type SiteData } from "@/lib/siteData";
+import { isLegacyMenuData } from "@/data/menuData";
+import { normalizeSiteSettings } from "@/data/settings";
 import { readJsonBody, RequestBodyTooLargeError } from "@/lib/server/requestBody";
 import { checkRateLimit } from "@/lib/server/rateLimit";
 
@@ -108,6 +110,14 @@ function getPublicSiteData(value: unknown): Partial<SiteData> | null {
   return data;
 }
 
+function migratePublicSiteData(value: unknown): Partial<SiteData> | null {
+  const data = getPublicSiteData(value);
+  if (!data) return null;
+  if (data.menuData && isLegacyMenuData(data.menuData)) data.menuData = defaultSiteData.menuData;
+  if (data.settings) data.settings = normalizeSiteSettings(data.settings);
+  return data;
+}
+
 export async function GET(request: NextRequest) {
   const rateLimit = checkRateLimit(request, "public-site-data", 120, 60 * 1000);
   if (!rateLimit.allowed) {
@@ -128,7 +138,7 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(
-    { data: getPublicSiteData(data?.data), configured: true, databaseReady: true, adminConfigured: isAdminPasswordConfigured() },
+    { data: migratePublicSiteData(data?.data), configured: true, databaseReady: true, adminConfigured: isAdminPasswordConfigured() },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

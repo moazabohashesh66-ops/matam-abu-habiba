@@ -6,7 +6,7 @@ import type { Category } from "@/data/menuData";
 import { loadSharedSiteData, saveSharedDataField } from "@/lib/siteDataClient";
 
 // Bump the key so browsers do not keep showing the previous menu after this update.
-export const MENU_STORAGE_KEY = "abu-habiba-menu-v3";
+export const MENU_STORAGE_KEY = "kayan-menu-v1";
 
 export function useMenuData() {
   const [menuData, setMenuData] = useState<Category[]>(defaultMenuData);

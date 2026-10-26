@@ -3,15 +3,16 @@
 import { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import AdminAccessGate from "@/components/admin/AdminAccessGate";
+import { SITE_URL } from "@/lib/seo";
 
 function QRContent() {
-  const [url, setUrl] = useState("https://abu-habiba-menu.vercel.app");
+  const [url, setUrl] = useState(SITE_URL);
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-md rounded-2xl bg-white p-5 text-center shadow-xl sm:p-8">
         <h1 className="mb-6 text-xl font-bold text-[#2E1A12] sm:text-2xl">
-          🍽️ QR Code للمنيو - مطعم أبو حبيبه
+          🍽️ QR Code لمنيو كيان
         </h1>
 
         <div className="mb-6">
@@ -29,7 +30,7 @@ function QRContent() {
         </div>
 
         <p className="text-sm text-gray-500 mt-4">
-          امسح الكود لفتح منيو مطعم أبو حبيبه
+          امسح الكود لفتح منيو كيان
         </p>
 
         <button
@@ -37,7 +38,7 @@ function QRContent() {
             const canvas = document.querySelector("canvas");
             if (canvas) {
               const link = document.createElement("a");
-              link.download = "qr-abu-habiba.png";
+              link.download = "qr-kayan-menu.png";
               link.href = canvas.toDataURL();
               link.click();
             }

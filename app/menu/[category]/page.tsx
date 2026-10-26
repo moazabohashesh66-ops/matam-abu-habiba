@@ -11,10 +11,12 @@ import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/layout/Footer";
 
 const fallbackCategoryImages: Record<string, string> = {
-  meals: "https://images.unsplash.com/photo-1781332147287-191fcfbd52be?auto=format&fit=crop&w=1200&q=80",
-  sandwiches: "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=1200&h=400&fit=crop",
-  pizza: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200&h=400&fit=crop",
-  crepes: "https://images.unsplash.com/photo-1647563186842-64d898764d5e?auto=format&fit=crop&w=1200&q=80",
+  shawarma: "/images/kayan/shawarma.png",
+  "shawarma-weights": "/images/kayan/shawarma-weights.png",
+  crepes: "/images/kayan/crepes.png",
+  burgers: "/images/kayan/burgers.png",
+  saj: "/images/kayan/saj.png",
+  additions: "/images/kayan/additions.png",
 };
 
 const getDefaultOptionSelections = (product: Product) => Object.fromEntries(

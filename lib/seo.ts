@@ -1,16 +1,18 @@
+import { DEFAULT_FACEBOOK_URL } from "@/data/settings";
+
 export const SITE_URL = "https://matam-abu-habiba.vercel.app";
-export const SITE_NAME = "مطعم أبو حبيبه";
+export const SITE_NAME = "كيان";
 export const SITE_DESCRIPTION =
-  "مطعم أبو حبيبه يقدم البيتزا والشاورما والكريب والسندوتشات والوجبات. تصفح المنيو واطلب أونلاين.";
-export const RESTAURANT_PHONE = "+201099176750";
-export const RESTAURANT_FACEBOOK =
-  "https://www.facebook.com/profile.php?id=61590812648091&locale=ar_AR";
+  "تصفح منيو الشاورما والكريب والبرجر والساج من كيان واطلب أونلاين.";
+export const RESTAURANT_PHONE = "+201010062463";
 
 export const MENU_CATEGORY_NAMES: Record<string, string> = {
-  pizza: "البيتزا",
-  sandwiches: "السندوتشات",
+  shawarma: "الشاورما",
+  "shawarma-weights": "أوزان الشاورما",
   crepes: "الكريب",
-  meals: "الوجبات",
+  burgers: "البرجر",
+  saj: "قسم الغربي (عيش الصاج)",
+  additions: "الإضافات",
 };
 
 export const siteStructuredData = {
@@ -21,7 +23,7 @@ export const siteStructuredData = {
       "@id": `${SITE_URL}/#website`,
       url: `${SITE_URL}/`,
       name: SITE_NAME,
-      alternateName: ["أبو حبيبه", "ابو حبيبه", "مطعم ابو حبيبه"],
+      alternateName: ["كيان", "Kayan"],
       inLanguage: "ar-EG",
     },
     {
@@ -29,11 +31,11 @@ export const siteStructuredData = {
       "@id": `${SITE_URL}/#restaurant`,
       name: SITE_NAME,
       url: `${SITE_URL}/`,
-      image: `${SITE_URL}/logo.jpg`,
+      image: `${SITE_URL}/logo.png`,
       telephone: RESTAURANT_PHONE,
-      servesCuisine: ["مصري", "شامي", "وجبات سريعة"],
+      sameAs: [DEFAULT_FACEBOOK_URL],
+      servesCuisine: ["شاورما", "كريب", "برجر", "وجبات سريعة"],
       menu: `${SITE_URL}/#menu`,
-      sameAs: [RESTAURANT_FACEBOOK],
     },
   ],
 } as const;

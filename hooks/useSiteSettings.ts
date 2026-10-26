@@ -5,6 +5,7 @@ import {
   defaultSettings,
   SETTINGS_CHANGED_EVENT,
   SETTINGS_KEY,
+  normalizeSiteSettings,
   type SiteSettings,
 } from "@/data/settings";
 import { loadSharedSiteData, saveSharedDataField } from "@/lib/siteDataClient";
@@ -15,7 +16,7 @@ function readSettings(): SiteSettings {
     if (stored) {
       const parsed: unknown = JSON.parse(stored);
       if (parsed && typeof parsed === "object") {
-        return { ...defaultSettings, ...parsed } as SiteSettings;
+        return normalizeSiteSettings(parsed as Partial<SiteSettings>);
       }
     }
   } catch {}
@@ -44,7 +45,7 @@ export function useSiteSettings() {
     loadSharedSiteData()
       .then(({ data }) => {
         if (data?.settings && typeof data.settings === "object") {
-          const sharedSettings = { ...defaultSettings, ...data.settings } as SiteSettings;
+          const sharedSettings = normalizeSiteSettings(data.settings as Partial<SiteSettings>);
           setCurrentSettings(sharedSettings);
           try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(sharedSettings)); } catch {}
         }
