@@ -1,6 +1,6 @@
 import { DEFAULT_FACEBOOK_URL } from "@/data/settings";
 
-export const SITE_URL = "https://matam-abu-habiba.vercel.app";
+export const SITE_URL = "https://mateamkian.vercel.app";
 export const SITE_NAME = "كيان";
 export const SITE_DESCRIPTION =
   "تصفح منيو الشاورما والكريب والبرجر والساج من كيان واطلب أونلاين.";
