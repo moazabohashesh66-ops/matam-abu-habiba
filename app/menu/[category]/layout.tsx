@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { MENU_CATEGORY_NAMES, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { SITE_LOGO_OPEN_GRAPH } from "@/data/brand";
+import {
+  MENU_CATEGORY_NAMES,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -26,7 +32,7 @@ export async function generateMetadata({
       siteName: SITE_NAME,
       title: `${title} | ${SITE_NAME}`,
       description,
-      images: [{ url: "/logo.png", alt: SITE_NAME }],
+      images: [SITE_LOGO_OPEN_GRAPH],
     },
   };
 }

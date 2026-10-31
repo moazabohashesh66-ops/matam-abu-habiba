@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { defaultSettings, formatDisplayPhone, toTelephoneLink } from "@/data/settings";
+import { SITE_LOGO_ALT, SITE_LOGO_URL } from "@/data/brand";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function Hero() {
@@ -18,8 +19,8 @@ export default function Hero() {
       {/* ===== الخلفية: صورة اللوجو بلور احترافي ===== */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/logo.png"
-          alt="شعار كيان"
+          src={SITE_LOGO_URL}
+          alt={SITE_LOGO_ALT}
           fill
           sizes="100vw"
           className="object-cover object-center scale-110"
@@ -58,8 +59,8 @@ export default function Hero() {
           <div className="relative mx-auto h-36 w-36 rounded-full bg-gradient-to-tr from-yellow-400 via-orange-400 to-yellow-500 p-1 shadow-2xl shadow-yellow-500/30 sm:h-44 sm:w-44 md:h-56 md:w-56">
             <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1a0e0a]/50">
               <Image
-                src="/logo.png"
-                alt="شعار كيان"
+                src={SITE_LOGO_URL}
+                alt={SITE_LOGO_ALT}
                 width={224}
                 height={224}
                 className="w-full h-full object-cover object-top"

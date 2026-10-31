@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import AdminAccessGate from "@/components/admin/AdminAccessGate";
+import { SITE_LOGO_URL } from "@/data/brand";
 import { SITE_URL } from "@/lib/seo";
 
 function QRContent() {
@@ -26,7 +27,13 @@ function QRContent() {
         </div>
 
         <div className="inline-block max-w-full rounded-lg border border-gray-200 bg-white p-3 sm:p-4">
-          <QRCodeCanvas value={url} size={200} level="H" style={{ maxWidth: "100%", height: "auto" }} />
+          <QRCodeCanvas
+            value={url}
+            size={200}
+            level="H"
+            imageSettings={{ src: SITE_LOGO_URL, width: 44, height: 44, excavate: true }}
+            style={{ maxWidth: "100%", height: "auto" }}
+          />
         </div>
 
         <p className="text-sm text-gray-500 mt-4">

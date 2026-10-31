@@ -1,4 +1,5 @@
 import { DEFAULT_FACEBOOK_URL } from "@/data/settings";
+import { SITE_LOGO_URL } from "@/data/brand";
 
 export const SITE_URL = "https://mateamkian.vercel.app";
 export const SITE_NAME = "كيان";
@@ -31,7 +32,8 @@ export const siteStructuredData = {
       "@id": `${SITE_URL}/#restaurant`,
       name: SITE_NAME,
       url: `${SITE_URL}/`,
-      image: `${SITE_URL}/logo.png`,
+      image: `${SITE_URL}${SITE_LOGO_URL}`,
+      logo: `${SITE_URL}${SITE_LOGO_URL}`,
       telephone: RESTAURANT_PHONE,
       sameAs: [DEFAULT_FACEBOOK_URL],
       servesCuisine: ["شاورما", "كريب", "برجر", "وجبات سريعة"],
