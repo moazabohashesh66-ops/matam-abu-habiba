@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_LOGO_OPEN_GRAPH } from "@/data/brand";
+import { SITE_OPEN_GRAPH_IMAGE } from "@/data/brand";
 import {
   MENU_CATEGORY_NAMES,
   SITE_DESCRIPTION,
@@ -32,7 +32,7 @@ export async function generateMetadata({
       siteName: SITE_NAME,
       title: `${title} | ${SITE_NAME}`,
       description,
-      images: [SITE_LOGO_OPEN_GRAPH],
+      images: [SITE_OPEN_GRAPH_IMAGE],
     },
   };
 }

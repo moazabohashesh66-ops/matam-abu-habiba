@@ -3,7 +3,11 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import Cart from "@/components/shared/Cart";
-import { SITE_LOGO_ALT, SITE_LOGO_OPEN_GRAPH, SITE_LOGO_URL } from "@/data/brand";
+import {
+  SITE_LOGO_ALT,
+  SITE_OPEN_GRAPH_IMAGE,
+  SITE_SHARE_IMAGE_URL,
+} from "@/data/brand";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -37,13 +41,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [SITE_LOGO_OPEN_GRAPH],
+    images: [SITE_OPEN_GRAPH_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [{ url: SITE_LOGO_URL, alt: SITE_LOGO_ALT }],
+    images: [{ url: SITE_SHARE_IMAGE_URL, alt: SITE_LOGO_ALT }],
   },
   robots: {
     index: true,
